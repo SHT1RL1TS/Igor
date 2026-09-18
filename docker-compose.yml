@@ -1,6 +1,6 @@
 services:
   backend:
-    container_name: valera-backend
+    container_name: igor-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -12,7 +12,7 @@ services:
       - app-network
 
   frontend:
-    container_name: valera-frontend
+    container_name: igor-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
@@ -28,7 +28,7 @@ services:
       - app-network
 
   nginx:
-    container_name: valera-nginx
+    container_name: igor-nginx
     image: nginx:alpine
     ports:
       - "80:80"

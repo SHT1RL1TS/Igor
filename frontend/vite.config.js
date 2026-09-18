@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
-    allowedHosts: true, // Разрешает Nginx проксировать запросы с igor.com
+    allowedHosts: true,
     watch: {
       usePolling: true,
     },
