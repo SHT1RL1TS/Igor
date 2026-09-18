@@ -225,3 +225,176 @@ header {
   background-color: #0e1621;
   color: #f5f5f5;
 }
+
+/* ===== Layout fix ===== */
+.main {
+    display: flex;
+}
+.main-rigth {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+}
+.chats {
+    height: 100%; // было 100vh — ломало верстку
+}
+
+/* ===== Chat window ===== */
+.chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: @bg-main;
+    color: @color-text;
+    height: 100%;
+    &.empty {
+        align-items: center;
+        justify-content: center;
+        p { color: @color-muted; font: 1em 'Rubik', sans-serif; }
+    }
+    .chat-header {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background-color: @bg-secondary;
+        img {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .chat-header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            h3 { font: bold 1.1em/1 'Rubik', sans-serif; }
+            .status { font: 0.8em/1 'Rubik', sans-serif; color: @color-online; }
+        }
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        &::-webkit-scrollbar { width: 5px; }
+        &::-webkit-scrollbar-thumb { background: @color-accent; border-radius: 5px; }
+        .message {
+            display: flex;
+            .bubble {
+                max-width: 60%;
+                padding: 8px 12px;
+                border-radius: 12px;
+                position: relative;
+                p { font: 0.95em/1.4 'Rubik', sans-serif; word-break: break-word; }
+                .time {
+                    float: right;
+                    font-size: 0.7em;
+                    color: @color-muted;
+                    margin: 6px 0 0 10px;
+                }
+            }
+            &.in .bubble { background-color: @bg-bubble-in; border-bottom-left-radius: 4px; align-self: flex-start; }
+            &.out { justify-content: flex-end; }
+            &.out .bubble { background-color: @bg-bubble-out; border-bottom-right-radius: 4px; }
+        }
+    }
+    .chat-input {
+        flex-shrink: 0;
+        display: flex;
+        gap: 10px;
+        padding: 12px 16px;
+        background-color: @bg-secondary;
+        input {
+            flex: 1;
+            height: 40px;
+            border: none;
+            background-color: @bg-input;
+            color: @color-text;
+            padding: 5px 12px;
+            border-radius: 8px;
+            outline: none;
+            &:focus { box-shadow: 0 0 0 2px @color-accent; }
+        }
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 0 20px;
+            background-color: @color-accent;
+            color: #fff;
+            font: 500 0.9em 'Rubik', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            &:hover:not(:disabled) { background-color: lighten(@color-accent, 8%); }
+            &:disabled { opacity: 0.5; cursor: default; }
+        }
+    }
+}
+
+/* ===== Active chat in sidebar ===== */
+.chat-item.active { background-color: @bg-bubble-out; }
+
+/* ===== Profile modal ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    .modal {
+        position: relative;
+        background-color: @bg-secondary;
+        border-radius: 12px;
+        padding: 32px 40px;
+        text-align: center;
+        color: @color-text;
+        min-width: 300px;
+        animation: modal-in 0.2s ease;
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            border: none;
+            background: none;
+            color: @color-muted;
+            font-size: 1.6em;
+            cursor: pointer;
+            &:hover { color: @color-text; }
+        }
+        .modal-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 12px;
+        }
+        h2 { font: bold 1.3em 'Rubik', sans-serif; margin-bottom: 4px; }
+        .modal-status { color: @color-online; font: 0.85em 'Rubik', sans-serif; }
+        .modal-actions {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            .btn {
+                border: none;
+                border-radius: 8px;
+                padding: 10px;
+                background-color: @color-accent;
+                color: #fff;
+                font: 500 0.9em 'Rubik', sans-serif;
+                cursor: pointer;
+                &:hover { background-color: lighten(@color-accent, 8%); }
+                &.danger { background-color: #c1504f; &:hover { background-color: lighten(#c1504f, 8%); } }
+            }
+        }
+    }
+}
