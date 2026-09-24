@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15
-    container_name: db
+    container_name: igor-db
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: jdp96n

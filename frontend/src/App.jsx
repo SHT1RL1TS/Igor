@@ -27,7 +27,13 @@ function App() {
   const [user, setUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [messages, setMessages] = useState({}); // { chatId: [{id, text, fromMe, time}] }
+  const [messages, setMessages] = useEffect(() => {
+    if (!selectedChat) return;
+    fetch(`/api/chats/${selectedChat.id}/messages`)
+      .then((res) => res.json())
+      .then((data) => setMessages((prev) => ({ ...prev, [selectedChat.id]: data })))
+      .catch(console.error);
+  }, [selectedChat]); // { chatId: [{id, text, fromMe, time}] }
 
   const getTime = () =>
     new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
