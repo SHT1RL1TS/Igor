@@ -1,27 +1,30 @@
 import { Request, Response } from 'express';
-import { CreateUserDTO, User } from '../types/user.js';
+import { pool } from '../db.js';
 
-// Временное хранилище (вместо БД)
-const users: User[] = [];
-
-export const getUsers = (req: Request, res: Response) => {
-  res.json({ success: true, data: users });
+// GET /api/users — список всех пользователей (для сайдбара)
+export const getUsers = async (req: Request, res: Response) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, username, avatar_url FROM users ORDER BY username'
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
 };
 
-export const createUser = (req: Request<{}, {}, CreateUserDTO>, res: Response) => {
-  const { name, email } = req.body;
-
-  if (!name || !email) {
-    res.status(400).json({ success: false, message: 'Name and email are required' });
-    return;
+// GET /api/users/:id — один пользователь
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, username, avatar_url FROM users WHERE id = $1',
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'User not found' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
-
-  const newUser: User = {
-    id: Date.now().toString(),
-    name,
-    email,
-  };
-
-  users.push(newUser);
-  res.status(201).json({ success: true, data: newUser });
 };

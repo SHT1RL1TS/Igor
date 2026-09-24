@@ -2,12 +2,12 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Backend API for Igor app",
-  "main": "dist/index.js",
+  "main": "dist/server.ts",
   "type": "module",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/server.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
