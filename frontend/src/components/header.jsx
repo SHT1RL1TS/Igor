@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=2b5278&color=fff&name=';
 

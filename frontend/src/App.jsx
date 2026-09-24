@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import Header from './header';
-import Sidebar from './sidebar';
-import Chat from "./chat";
-import ChatWindow from './chatWindow';
-import ProfileModal from './profileModal';
-import favicon from './image/Igor.png';
-import './App.less';
+import Header from './components/header';
+import Sidebar from './components/sidebar';
+import Chat from "./components/chat";
+import ChatWindow from './components/chatWindow';
+import ProfileModal from './components/profileModal';
+import favicon from './public/image/Igor.png';
+import './public/less/App.less';
 
 const link = document.createElement('link');
 link.rel = 'icon';
@@ -56,13 +56,6 @@ function App() {
       name: 'SHT1RL1TS',
       imageUrl: 'https://igor.com/src/image/avatars/SHT1RL1TS.png'
     });
-
-    /* ПОТОМ (когда бэкенд будет готов, просто раскомментируете):
-    fetch('/api/user/me')
-      .then((res) => res.json())
-      .then((data) => setUser(data))
-      .catch((err) => console.error('Failed to load user:', err));
-    */
   }, []);
 
   return (
