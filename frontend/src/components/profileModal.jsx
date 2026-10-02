@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
-const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=2b5278&color=fff&name=';
+import defaultAvatar from '../public/image/avatars/standart_user.png';
+import { handleAvatarError } from '../avatar';
 
 export default function ProfileModal({ user, onClose }) {
   // Закрытие по Escape
@@ -14,27 +15,21 @@ export default function ProfileModal({ user, onClose }) {
 
   if (!user) return null;
 
-  const avatarSrc = user.imageUrl || `${DEFAULT_AVATAR}${encodeURIComponent(user.name || 'U')}`;
+  const avatarSrc = user.imageUrl || defaultAvatar;
 
   return (
     // Клик по фону закрывает окно
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>&times;</button>
+      <div className="modal" role="dialog" aria-modal="true" aria-label="Профиль" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" aria-label="Закрыть профиль" onClick={onClose} autoFocus>&times;</button>
         <img
           className="modal-avatar"
           src={avatarSrc}
           alt={user.name}
-          onError={(e) => {
-            e.currentTarget.src = `${DEFAULT_AVATAR}${encodeURIComponent(user.name || 'U')}`;
-          }}
+          onError={handleAvatarError}
         />
         <h2>{user.name}</h2>
-        <p className="modal-status">online</p>
-        <div className="modal-actions">
-          <button className="btn">Изменить аватар</button>
-          <button className="btn danger">Выйти</button>
-        </div>
+        <p className="modal-status">Демонстрационный профиль</p>
       </div>
     </div>
   );

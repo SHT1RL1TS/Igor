@@ -5,7 +5,10 @@ export const useResizable = (initialWidth = 300, minWidth = 150, maxWidth = 600)
   const [isResizing, setIsResizing] = useState(false);
   const elementRef = useRef(null);
 
-  const startResizing = () => setIsResizing(true);
+  const startResizing = (event) => {
+    event.preventDefault();
+    setIsResizing(true);
+  };
 
   useEffect(() => {
     const resize = (e) => {
@@ -21,16 +24,16 @@ export const useResizable = (initialWidth = 300, minWidth = 150, maxWidth = 600)
     if (isResizing) {
       window.addEventListener('mousemove', resize);
       window.addEventListener('mouseup', stopResizing);
+      window.addEventListener('blur', stopResizing);
 
-      // 👇 ДОБАВЛЯЕМ ЭТУ СТРОКУ: запрещаем выделение на всей странице
       document.body.classList.add('is-resizing');
     }
 
     return () => {
       window.removeEventListener('mousemove', resize);
       window.removeEventListener('mouseup', stopResizing);
+      window.removeEventListener('blur', stopResizing);
 
-      // 👇 ДОБАВЛЯЕМ ЭТУ СТРОКУ: убираем класс при остановке
       document.body.classList.remove('is-resizing');
     };
   }, [isResizing, minWidth, maxWidth]);
@@ -40,7 +43,7 @@ export const useResizable = (initialWidth = 300, minWidth = 150, maxWidth = 600)
 
 const Sidebar = ({
   initialWidth = 300,
-  minWidth = 150,
+  minWidth = 60,
   maxWidth = 600,
   children,
 }) => {
@@ -53,8 +56,8 @@ const Sidebar = ({
   return (
     <div className="chats">
       <div ref={elementRef} className="sidebar" style={{ width: `${width}px` }}>
-        <div className="resize-handle" onMouseDown={startResizing} />
-        {children} { }
+        <div className={`resize-handle ${isResizing ? 'active' : ''}`} onMouseDown={startResizing} />
+        {children}
       </div>
     </div>
   );

@@ -1,63 +1,72 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { socket } from '../socket';
+import { api } from '../api';
+import { mergeMessages } from '../messages';
+import { handleAvatarError } from '../avatar';
 
-export default function ChatWindow({ chat, messages, onSend }) {
-  const [text, setText] = useState('');
+export default function ChatWindow({ chat, currentUser }) {
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState('');
+  const [historyError, setHistoryError] = useState('');
+  const [connection, setConnection] = useState('connecting');
+  const [reload, setReload] = useState(0);
   const bottomRef = useRef(null);
 
-  // Автопрокрутка к последнему сообщению
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, chat]);
-
-  // Чат не выбран — показываем заглушку
   if (!chat) {
-    return (
-      <div className="chat-window empty">
-        <p>Выберите чат, чтобы начать общение</p>
-      </div>
-    );
+    return <div className="chat-window empty"><p>Выберите чат слева</p></div>;
   }
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-    onSend(chat.id, text.trim());
-    setText('');
-  };
 
   return (
     <div className="chat-window">
-      {/* Шапка открытого чата */}
       <div className="chat-header">
-        <img src={chat.imageUrl} alt={chat.name} />
+        <img src={chat.imageUrl} alt={chat.name} onError={handleAvatarError} />
         <div className="chat-header-info">
           <h3>{chat.name}</h3>
-          <span className="status">online</span>
+          <span className="status" role="status">
+            {connection === 'connected' ? 'Соединение установлено' : connection === 'connecting' ? 'Подключение…' : 'Нет соединения с обновлениями'}
+          </span>
         </div>
       </div>
 
-      {/* Лента сообщений */}
       <div className="chat-messages">
-        {(messages[chat.id] || []).map((m) => (
-          <div key={m.id} className={`message ${m.fromMe ? 'out' : 'in'}`}>
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`message ${Number(message.sender_id) === Number(currentUser?.id) ? 'out' : 'in'}`}
+          >
             <div className="bubble">
-              <p>{m.text}</p>
-              <span className="time">{m.time}</span>
+              <p>{message.text}</p>
+              <span className="time">
+                {new Date(message.created_at).toLocaleTimeString([], {
+                  hour: '2-digit', minute: '2-digit'
+                })}
+              </span>
             </div>
           </div>
         ))}
         <div ref={bottomRef} />
       </div>
 
-      {/* Поле ввода */}
+      {(historyError || connection === 'disconnected') && <div className="chat-error" role="alert">
+        {historyError || 'Обновления недоступны. Пробуем подключиться снова.'}
+        <button onClick={() => setReload((value) => value + 1)}>Повторить</button>
+      </div>}
+      {error && <p className="chat-error" role="alert">{error}</p>}
       <form className="chat-input" onSubmit={handleSubmit}>
         <input
           type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+          value={inputValue}
+          aria-label="Сообщение"
+          maxLength={10000}
+          disabled={isSending}
+          onChange={(event) => setInputValue(event.target.value)}
           placeholder="Написать сообщение..."
         />
-        <button type="submit" disabled={!text.trim()}>Отправить</button>
+        <button type="submit" disabled={!inputValue.trim() || isSending}>
+          Отправить
+        </button>
       </form>
     </div>
   );

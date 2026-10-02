@@ -2,21 +2,37 @@ services:
   db:
     image: postgres:15
     container_name: igor-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: jdp96n
-      POSTGRES_DB: igor_db
-    volumes:
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - pg_data:/var/lib/postgresql/data
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d igor_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    networks:
+      - app-network
+
+  db-init:
+    image: postgres:15
+    env_file:
+      - .env
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./postgres/init.sql:/init.sql:ro
+    command: ["psql", "-h", "db", "-U", "${DB_USER}", "-d", "${DB_NAME}", "-v", "ON_ERROR_STOP=1", "-f", "/init.sql"]
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -25,17 +41,24 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
-      - PORT=5000
-      - NODE_ENV=production
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=root
-      - DB_PASSWORD=jdp96n
-      - DB_NAME=igor_db
+      DB_HOST: db
+      PORT: 8080
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      db:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
     networks:
       - app-network
@@ -44,38 +67,20 @@ services:
     container_name: igor-frontend
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend:/app
-      - frontend_modules:/app/node_modules
-    environment:
-      - NODE_ENV=development
+      dockerfile: Dockerfile
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app-network
 
-  nginx:
-    container_name: igor-nginx
-    image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certs:/etc/nginx/ssl:ro
-    depends_on:
-      - frontend
-      - backend
-    restart: unless-stopped
-    networks:
-      - app-network
+      - "${HTTP_PORT:-80}:80"
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  frontend_modules:
   pg_data:

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import Header from './components/header';
@@ -6,6 +6,8 @@ import Sidebar from './components/sidebar';
 import Chat from "./components/chat";
 import ChatWindow from './components/chatWindow';
 import ProfileModal from './components/profileModal';
+import { api } from './api';
+import defaultAvatar from './public/image/avatars/standart_user.png';
 import favicon from './public/image/Igor.png';
 import './public/less/App.less';
 
@@ -14,64 +16,33 @@ link.rel = 'icon';
 link.href = favicon;
 document.head.appendChild(link);
 
-const chatData = {};
-
-function addUser(id, name, imageUrl) {
-  chatData[id] = {id, name, imageUrl };
-}
-
-addUser(2, 'roton4ik', 'https://igor.com/src/image/avatars/roton4ik.png')
-addUser(3, 'Nastya', 'https://igor.com/src/image/avatars/Nastya.png')
+// These are chat IDs from postgres/init.sql, not user IDs.
+const demoChats = [{ id: 2, name: 'roton4ik' }, { id: 3, name: 'Nastya' }];
 
 function App() {
   const [user, setUser] = useState(null);
+  const [chatData, setChatData] = useState([]);
+  const [loadError, setLoadError] = useState('');
+  const [reload, setReload] = useState(0);
+  const [search, setSearch] = useState('');
   const [selectedChat, setSelectedChat] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [messages, setMessages] = useEffect(() => {
-    if (!selectedChat) return;
-    fetch(`/api/chats/${selectedChat.id}/messages`)
-      .then((res) => res.json())
-      .then((data) => setMessages((prev) => ({ ...prev, [selectedChat.id]: data })))
-      .catch(console.error);
-  }, [selectedChat]); // { chatId: [{id, text, fromMe, time}] }
 
-  const getTime = () =>
-    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  const handleSendMessage = (chatId, text) => {
-    const msg = { id: Date.now(), text, fromMe: true, time: getTime() };
-    setMessages((prev) => ({ ...prev, [chatId]: [...(prev[chatId] || []), msg] }));
-
-    // Временная имитация ответа собеседника.
-    // Потом заменится на WebSocket / fetch к бэкенду.
-    const chat = chatData[chatId];
-    setTimeout(() => {
-      const reply = {
-        id: Date.now() + 1,
-        text: `Привет! Это ${chat.name}.`,
-        fromMe: false,
-        time: getTime(),
-      };
-      setMessages((prev) => ({ ...prev, [chatId]: [...(prev[chatId] || []), reply] }));
-    }, 1000);
-  };
-
-  useEffect(() => {
-    setUser({
-      id: 1,
-      name: 'SHT1RL1TS',
-      imageUrl: 'https://igor.com/src/image/avatars/SHT1RL1TS.png'
-    });
-  }, []);
+  if (!user) return (
+    <div className="app-loading" role={loadError ? 'alert' : 'status'}>
+      <p>{loadError || 'Загрузка Igor…'}</p>
+      {loadError && <button onClick={() => setReload((value) => value + 1)}>Повторить</button>}
+    </div>
+  );
 
   return (
     <div>
-      <Header user={user} onAvatarClick={() => setIsProfileOpen(true)} />
+      <Header user={user} search={search} onSearch={setSearch} onAvatarClick={() => setIsProfileOpen(true)} />
       <div className='main'>
         <div className='main-left'>
           <Sidebar initialWidth={250} minWidth={90} maxWidth={400}>
             <Chat
-              chaters={chatData}
+              chaters={chatData.filter((chat) => chat.name.toLowerCase().includes(search.toLowerCase().trim()))}
               activeId={selectedChat?.id}
               onSelect={setSelectedChat}
             />
@@ -79,9 +50,9 @@ function App() {
         </div>
         <div className='main-rigth'>
           <ChatWindow
+            key={selectedChat?.id ?? 'empty'}
             chat={selectedChat}
-            messages={messages}
-            onSend={handleSendMessage}
+            currentUser={user}
           />
         </div>
       </div>

@@ -1,4 +1,8 @@
 frontend/build/
 frontend/node_modules/
-certs/
+backend/node_modules/
+backend/dist/
+.npm-cache/
+frontend/test-results/
+frontend/playwright-report/
 .env

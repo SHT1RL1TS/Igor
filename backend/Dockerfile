@@ -1,16 +1,21 @@
-# --- Сборка ---
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS build
+
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+COPY package*.json tsconfig.json ./
+RUN npm ci
+
 COPY . .
 RUN npm run build
 
-# --- Запуск ---
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
+ENV NODE_ENV=production
 COPY package*.json ./
-RUN npm install --omit=dev
-COPY --from=builder /app/dist ./dist
-EXPOSE 5000
+RUN npm ci --omit=dev
+COPY --from=build /app/dist ./dist
+USER node
+
+EXPOSE 8080
+
 CMD ["node", "dist/server.js"]
